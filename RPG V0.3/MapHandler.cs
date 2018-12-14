@@ -18,8 +18,10 @@ namespace RPG_V0._3
     public struct Level
     {
         public TiledMap Map;
+
         public string MapName;
         public TiledMapObjectLayer ObjectLayer;
+        public List<Character> Characters;
 
         public int[,] ElevationMatrix;
         public int[,] NavigationMatrix;
@@ -31,6 +33,8 @@ namespace RPG_V0._3
             ObjectLayer = map.GetLayer<TiledMapObjectLayer>("GameObjects");
             NavigationMatrix = new int[map.Width,map.Height];
             ElevationMatrix = new int[map.Width, map.Height];
+            Characters = new List<Character>();
+
         }
     }
 
@@ -39,7 +43,7 @@ namespace RPG_V0._3
         public static List<Level> availableMaps;
         public static TiledMapRenderer mapRenderer;
         public static Level currentLevel;
-        public static TiledMapObjectLayer objectLayer;
+        public static Vector2 playerSpawn;
 
         private static ContentManager Content;
         private static GraphicsDevice graphicsDevice;
@@ -53,7 +57,7 @@ namespace RPG_V0._3
             availableMaps.Add(new Level(content.Load<TiledMap>(@"Maps\DEMO2")));
             availableMaps.Add(new Level(content.Load<TiledMap>(@"Maps\ObjectTest")));
 
-            currentLevel = availableMaps.First(); 
+            currentLevel = availableMaps.First();
 
         }
 
@@ -71,19 +75,38 @@ namespace RPG_V0._3
                     {
                         //map found in available maps
                         currentLevel = map;
-                        objectLayer = currentLevel.ObjectLayer;
                         //set parameters from objects in map
-                        foreach (var entity in objectLayer.Objects)
+                        foreach (var entity in currentLevel.ObjectLayer.Objects)
                         {
+                            Console.WriteLine(entity.Name + " found");
                             //camerastart parameter
                             if (entity.Name == "CameraStart")
                             {
                                 Camera.camera.Position = entity.Position;
                             }
+                            if (entity.Name == "Playerspawn")
+                            {
+                                Console.WriteLine("Object for playerspawn found, position = " + entity.Position);
+                                playerSpawn = entity.Position;
+                            }
+                            if (entity.Name == "NonPlayerSpawn")
+                            {
+                                Console.WriteLine("Object for nonplayer found, position = " + entity.Position);
+                                string NPCid = "";
+                                entity.Properties.TryGetValue("NPC_ID", out NPCid);
+                                LoadChar(NPCid,entity.Position);
+                                
+                            }
                         }
                     }
                 }
             }
+        }
+
+        public static void LoadChar(string NPCid,Vector2 position)
+        {
+            GameManager.CharacterDictionary[NPCid].Position = position;
+            currentLevel.Characters.Add(GameManager.CharacterDictionary[NPCid]);
         }
 
         public static void Update(GameTime gameTime)
@@ -105,6 +128,7 @@ namespace RPG_V0._3
                 case GameState.Pause:
                     break;
                 case GameState.GameplayLoop:
+                    LoadMap("ObjectTest");
                     mapRenderer.Update(currentLevel.Map, gameTime);
                     break;
                 case GameState.Quit:
@@ -137,7 +161,7 @@ namespace RPG_V0._3
                     break;
             }
         }
-
+        
         public static void DrawLayer(SpriteBatch spriteBatch, string LayerName)
         {
             spriteBatch.Begin(transformMatrix: Camera.camera.GetViewMatrix(), samplerState: SamplerState.PointClamp);

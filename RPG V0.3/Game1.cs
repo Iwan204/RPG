@@ -45,6 +45,7 @@ namespace RPG_V0._3
             Cursor = new Cursor(Content);
             Camera.Initialise(graphics.GraphicsDevice);
             MapHandler.Initialize(Content, graphics.GraphicsDevice);
+            GameManager.Initialise(Content);
 
             base.Initialize();
         }
@@ -89,13 +90,19 @@ namespace RPG_V0._3
                 case GameState.Pause:
                     break;
                 case GameState.GameplayLoop:
+                    Camera.Update();
+                    MapHandler.Update(gameTime);
+                    foreach (var character in MapHandler.currentLevel.Characters)
+                    {
+                        character.Update(gameTime);
+                    }
                     break;
                 case GameState.Combat:
                     break;
                 default:
                     break;
             }
-
+            //Console.WriteLine(GameManager.gameState);
             base.Update(gameTime);
         }
 
@@ -106,6 +113,13 @@ namespace RPG_V0._3
             MapHandler.Draw(spriteBatch);
             currentScreen.Draw();
             Cursor.Draw(spriteBatch);
+
+            foreach (var character in MapHandler.currentLevel.Characters)
+            {
+                spriteBatch.Begin(transformMatrix: Camera.camera.GetViewMatrix(), samplerState: SamplerState.PointClamp);
+                character.Draw(spriteBatch);
+                spriteBatch.End();
+            }
 
             base.Draw(gameTime);
         }

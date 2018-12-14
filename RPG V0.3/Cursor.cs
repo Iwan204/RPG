@@ -119,6 +119,8 @@ namespace RPG_V0._3
                 }
             }
             */
+            //Console.WriteLine(Camera.camera.ScreenToWorld(Mouse.GetState().Position.X, Mouse.GetState().Position.Y).X / 2 + "," + Camera.camera.ScreenToWorld(Mouse.GetState().Position.X, Mouse.GetState().Position.Y).Y);
+
         }
 
         public Vector2 Tile(Vector2 point)

@@ -8,13 +8,13 @@ using Microsoft.Xna.Framework.Graphics;
 using Ruminate.GUI.Content;
 using Ruminate.GUI.Framework;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Input;
 
 namespace RPG_V0._3
 {
     public abstract class Screen
     {
         public Color Color { get; set; }
-
         public abstract void Init(Game1 game);
         public abstract void OnResize();
         public abstract void Update(GameTime time);
@@ -43,6 +43,8 @@ namespace RPG_V0._3
         Label LabelCONVAL;
         Label LabelCHAVAL;
 
+        SingleLineTextBox NameBox;
+
         public override void Draw()
         {
             gui.Draw();
@@ -56,16 +58,16 @@ namespace RPG_V0._3
             AttributeColour = Color.OrangeRed;
             resizeNeeded = false;
 
-            Attributes = new AttributesStruct();
-            Attributes.Age = 16;
+            Attributes = GameManager.NewPlayer;
 
             gui = new Gui(game, skin, text);
             gui.AddText("Nixie", new Text(game.Nixie, AttributeColour));
 
             CharCreatePanel = new Panel(1, 1, game.GraphicsDevice.Viewport.Width / 3, game.GraphicsDevice.Viewport.Height - 10);
             CharCreatePanel.AddWidget(new Label(1 ,6,"NAME"));
-            SingleLineTextBox NameBox = new SingleLineTextBox(50, 0, 150, 1);
-            NameBox.Active = true;
+            NameBox = new SingleLineTextBox(50, 0, 150, 15);
+            NameBox.Value = GameManager.NewPlayerName;
+
             CharCreatePanel.AddWidget(NameBox);
 
             AttributePanel = new Panel(1,50,CharCreatePanel.Area.Width -10,70);
@@ -154,12 +156,12 @@ namespace RPG_V0._3
             SpeciesSelect.AddWidget(new Button(-5, SpeciesSelect.Area.Height / 2, 10, "<", delegate { }));
 
             gui.AddWidget(CharCreatePanel);
+            Console.WriteLine("Character Creation screen initialised");
         }
 
         public override void OnResize()
         {
             gui.Resize();
-            
         }
 
         private void SwitchMenus(Panel SwitchFrom, Panel SwitchTo) // as yet nonfunctional
@@ -172,14 +174,37 @@ namespace RPG_V0._3
         {
             gui.Update(time);
 
-            //Attribute label updates
-            LabelAGEVAL.Value = Convert.ToString(Attributes.Age);
-            LabelSTRVAL.Value = Convert.ToString(Attributes.Strength);
-            LabelINTVAL.Value = Convert.ToString(Attributes.Intelligence);
-            LabelCONVAL.Value = Convert.ToString(Attributes.Constitution);
-            LabelDEXVAL.Value = Convert.ToString(Attributes.Dexterity);
-            LabelCHAVAL.Value = Convert.ToString(Attributes.Charisma);
-            OnResize();
+            //Attribute label update
+            Attributes = GameManager.NewPlayer;
+
+            //OnResize();
+        }
+
+        private void CharacterPressed(object sender, CharacterEventArgs args)
+        {
+            Console.WriteLine("Character Pressed");
+        }
+    }
+
+    class BlankScreen : Screen
+    {
+        public override void Draw()
+        {
+
+        }
+
+        public override void Init(Game1 game)
+        {
+
+        }
+
+        public override void OnResize()
+        {
+
+        }
+
+        public override void Update(GameTime time)
+        {
 
         }
     }
@@ -196,6 +221,7 @@ namespace RPG_V0._3
         public override void Update(GameTime time)
         {
             gui.Update(time);
+
         }
 
         public override void Draw()
@@ -214,15 +240,27 @@ namespace RPG_V0._3
             Panel mainmenupanel = new Panel(game.GraphicsDevice.Viewport.Bounds.Center.X-((game.GraphicsDevice.Viewport.Width / 3)/2),game.GraphicsDevice.Viewport.Bounds.Bottom-175,game.GraphicsDevice.Viewport.Width / 3,game.GraphicsDevice.Viewport.Height / 3);
             mainmenupanel.AddWidget(new Button(1, 1,mainmenupanel.Area.Width-10,"New Game", delegate 
             {
-                GameManager.gameState = GameState.CharacterCreate;
-                game.currentScreen = new CharCreateScreen();
-                game.currentScreen.Init(game);
+                if (GameManager.gameState != GameState.CharacterCreate)
+                {
+                    GameManager.gameState = GameState.CharacterCreate;
+                    game.currentScreen = new CharCreateScreen();
+                    game.currentScreen.Init(game);
+                }
+
             }
             ));
             mainmenupanel.AddWidget(new Button(1, mainmenupanel.Area.Height / 4, mainmenupanel.Area.Width - 10, "Load Game"));
             mainmenupanel.AddWidget(new Button(1, (mainmenupanel.Area.Height / 4) * 2, mainmenupanel.Area.Width - 10, "Settings"));
             mainmenupanel.AddWidget(new Button(1, (mainmenupanel.Area.Height / 4) * 3, mainmenupanel.Area.Width - 10, "Quit"));
-
+            gui.AddWidget(new Button(1,1,10,"Debug", delegate 
+            {
+                if (GameManager.gameState != GameState.GameplayLoop)
+                {
+                    GameManager.gameState = GameState.GameplayLoop;
+                    game.currentScreen = new BlankScreen();
+                }
+            }
+            ));
             gui.AddWidget(mainmenupanel); 
         }
     }
